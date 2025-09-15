@@ -1,0 +1,110 @@
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->string('role');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+            Schema::create('app_settings', function (Blueprint $table) {
+            $table->id();
+            $table->string('app_name')->default('Learn Flow');
+            $table->string('app_logo')->nullable(); // Path logo
+            $table->boolean('show_logo')->default(1);
+            $table->boolean('show_name')->default(1);
+            $table->timestamps();
+        });
+            Schema::create('wali_kelas', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('users_id');
+            $table->string('kontak');
+            $table->timestamps();
+
+            $table->foreign('users_id')->references('id')->on('users')->onDelete('cascade');
+
+        });
+            Schema::create('wali_siswa', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('users_id');
+            $table->string('kontak');
+            $table->timestamps();
+
+            $table->foreign('users_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
+            Schema::create('kelas', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('guru_id');
+            $table->string('nama');
+            $table->timestamps();
+
+            $table->foreign('guru_id')->references('id')->on('wali_kelas')->onDelete('restrict');
+        });
+        
+            Schema::create('siswa', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('wali_id');
+            $table->unsignedBigInteger('kelas_id');
+            $table->string('nama_lengkap');
+            $table->string('nama_panggilan');
+            $table->string('jk');
+            $table->date('tetala');
+            $table->string('alamat')->nullable();
+            $table->timestamps();
+            $table->foreign('wali_id')->references('id')->on('wali_siswa')->onDelete('restrict');
+            $table->foreign('kelas_id')->references('id')->on('kelas')->onDelete('restrict');
+
+        });
+
+
+            Schema::create('aspeks', function (Blueprint $table) {
+                $table->id();
+                $table->string('nama'); 
+                $table->timestamps();
+            });
+
+            Schema::create('indikators', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('aspek_id');
+                $table->string('deskripsi');
+                $table->timestamps();
+
+                $table->foreign('aspek_id')->references('id')->on('aspeks')->onDelete('cascade');
+            });
+
+            Schema::create('penilaian', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('siswa_id');
+                $table->date('bulan'); 
+                $table->text('pesan_wali')->nullable();
+                $table->integer('nilai_akhir')->nullable(); // total semua aspek
+                $table->timestamps();
+
+                $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('restrict');
+            });
+
+
+
+            Schema::create('penilaian_detail', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('penilaian_id');
+                $table->unsignedBigInteger('aspek_id');
+                $table->tinyInteger('nilai'); // 1 - 10
+
+                $table->foreign('penilaian_id')->references('id')->on('penilaian')->onDelete('cascade');
+                $table->foreign('aspek_id')->references('id')->on('aspeks')->onDelete('cascade');
+            });
+
+            Schema::create('penilaian_indikator', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('penilaian_id');
+            $table->unsignedBigInteger('indikator_id');
+            $table->timestamps();
+
+            $table->foreign('penilaian_id')->references('id')->on('penilaian')->onDelete('cascade');
+            $table->foreign('indikator_id')->references('id')->on('indikators')->onDelete('cascade');
+            });

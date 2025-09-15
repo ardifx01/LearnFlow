@@ -1,0 +1,83 @@
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->string('role');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+
+                Schema::create('wali_kelas', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('users_id');
+            $table->string('kontak');
+            $table->timestamps();
+
+            $table->foreign('users_id')->references('id')->on('users')->onDelete('cascade');
+
+        });
+
+                Schema::create('wali_siswa', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('users_id');
+            $table->string('kontak');
+            $table->timestamps();
+
+            $table->foreign('users_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
+                Schema::create('kelas', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('guru_id');
+            $table->string('nama');
+            $table->timestamps();
+
+            $table->foreign('guru_id')->references('id')->on('wali_kelas')->onDelete('restrict');
+        });
+
+                Schema::create('siswa', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('wali_id');
+            $table->unsignedBigInteger('kelas_id');
+            $table->string('nama_lengkap');
+            $table->string('nama_panggilan');
+            $table->string('jk');
+            $table->date('tetala');
+            $table->string('alamat')->nullable();
+            $table->timestamps();
+            $table->foreign('wali_id')->references('id')->on('wali_siswa')->onDelete('restrict');
+            $table->foreign('kelas_id')->references('id')->on('kelas')->onDelete('restrict');
+
+        });
+
+                Schema::create('penilaian', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('siswa_id');
+            $table->date('bulan');
+            $table->text('nilai_agama')->nullable();
+            $table->text('nilai_literasi')->nullable();
+            $table->text('nilai_jati_diri')->nullable();
+            $table->text('pesan_wali')->nullable();
+            $table->enum('nilai', ['10', '50', '100']); // Memastikan status memiliki nilai tetap
+            $table->timestamps();
+            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('restrict');
+        });
+
+                Schema::create('laporan_pengiriman', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('siswa_id');
+            $table->string('bulan', 7); // Format: YYYY-MM (misal: 2025-03)
+            $table->boolean('wa_terkirim')->default(false);
+            $table->timestamp('wa_tanggal')->nullable();
+            $table->boolean('email_terkirim')->default(false);
+            $table->timestamp('email_tanggal')->nullable();
+            $table->timestamps();
+        
+            // Foreign Key
+            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
+        
+            // Hindari duplikasi data laporan per siswa per bulan
+            $table->unique(['siswa_id', 'bulan']);
+        });
